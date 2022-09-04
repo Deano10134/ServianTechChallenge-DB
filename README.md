@@ -28,3 +28,10 @@ The AWS environment will be set up with the following to host the application
 Amazon RDS instance to host the Database accross a Multiple AZ 
 EC2 instance to host the application that will be connect to a Auto Scaling Group to ensure that it is high available to scable to meet peek demands
 A Elastic Load balancer will be attached to the VPC 
+A S3 bucket will be hoating the files of the application.
+
+# Security
+
+Security considerations that will need to be considered include ensurring that the data is encrypted at rest.
+
+
