@@ -8,6 +8,7 @@ To deploy this database application to AWS the following needs to be setup on yo
 1. Set up Terraform
 
 To setup Terraform on Windows visit Terraform's website https://www.terraform.io/downloads
+
 2. Install the AWS CLI
 To Install the AWS CLI see AWS documentation https://aws.amazon.com/cli/
 
@@ -17,6 +18,7 @@ https://code.visualstudio.com/
 The IDE is where the code for the application will be set up.
 
 4. Github
+
 Github will be used to store and host the repos.
 
 
