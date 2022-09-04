@@ -33,7 +33,9 @@ An Elastic Load balancer will be attached to the VPC and help distribute the wor
 An S3 bucket will be used to host the files of the application. It will be stored in a folder available on an S3 bucket.
 
  ![Servian-challenge](https://user-images.githubusercontent.com/13935623/188301970-d8047494-0dfa-4655-83d8-67493a6f7f56.jpg)
-
+ 
+ The diagram shows a basic architecture of the AWS environment. It excludes Security Group rules, CodeCommit and Secrets Manager that would be added if I had more time to deploy the application to AWS. 
+ 
 # Network
 In the AWS environment, there will be one VPC with 2 subnets one that is Public and one that is private. The Private and Public VPCs will be set across two Availablity Zones. The Amazon Auroa instance will be set up in the two AZs and will be public so it is publically accessible. 
 
@@ -61,5 +63,7 @@ In this solutions I would uses secrets manager to store the databases crediental
 # CI/CD
 
 In AWS I would use CodeCommit to deploy the application through a CI/CD Pipeline. This would update any changes to the app.
+
+Also if given more time I would use CloudFormation to deploy the templates for the Auto Scaling group and use Cloudwatch to montor the Application.
 
 
