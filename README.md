@@ -64,6 +64,10 @@ In this solutions I would uses secrets manager to store the databases crediental
 
 In AWS I would use CodeCommit to deploy the application through a CI/CD Pipeline. This would update any changes to the app.
 
-Also if given more time I would use CloudFormation to deploy the templates for the Auto Scaling group and use Cloudwatch to montor the Application.
+Also if given more time I would use CloudFormation to deploy the templates for the Auto Scaling group and use Cloudwatch to montor the Application for performance.
+
+# Health Checks
+
+To verfy that the applications works once it would be deployed it would be tested that the application is accessable. 
 
 
