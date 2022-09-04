@@ -68,6 +68,6 @@ Also if given more time I would use CloudFormation to deploy the templates for t
 
 # Health Checks
 
-To verfy that the applications works once it would be deployed it would be tested that the application is accessable. 
+To verify that the applications works once it would be deployed it would be tested that the application is accessable. 
 
 
