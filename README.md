@@ -23,6 +23,10 @@ The IDE is where the code for the application will be set up.
 
 GitHub will be used to store and host the repos. It also is where the code for the application is updated. 
 
+5. Docker 
+
+Install Docker for desktop to setup the application
+
 
 # Architecture
 The AWS environment will be set up with the following to host the application
