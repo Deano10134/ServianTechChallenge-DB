@@ -60,7 +60,7 @@ The rules in the public subnet would be the following:
 
 In this solutions I would uses secrets manager to store the databases credientals in AWS. 
 
-#CI/CD
+# CI/CD
 
 In AWS I would use CodeCommit to deploy the application through a CI/CD Pipeline. This would update any changes to the app.
 
