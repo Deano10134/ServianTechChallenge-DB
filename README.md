@@ -31,7 +31,6 @@ Amazon Aurora DB instance to host the Database across a Multiple AZ
 EC2 instance to host the application that will be connected to an Auto Scaling Group to ensure that it is highly available to scalable to meet peak demands. The EC2 Auto scaling group will be set up between two availability zones. 
 An Elastic Load balancer will be attached to the VPC and help distribute the workloads of the application. 
 An S3 bucket will be used to host the files of the application. It will be stored in a folder available on an S3 bucket.
-
  
  
 # Network
