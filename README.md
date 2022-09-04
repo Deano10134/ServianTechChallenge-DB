@@ -30,8 +30,11 @@ EC2 instance to host the application that will be connect to a Auto Scaling Grou
 A Elastic Load balancer will be attached to the VPC 
 A S3 bucket will be hoating the files of the application.
 
+# Network
+In the AWS environment there will be one VPC with 2 subnets one that is Public and one that is private. The Private and Public VPCs will be set across two Availablity Zones. The RDS instance will be set up in the two AZs and will be public so it is publically accessable. 
 # Security
 
-Security considerations that will need to be considered include ensurring that the data is encrypted at rest.
+Security considerations that will need to be considered include ensurring that the data is encrypted at rest and that the S3 bucket is not accessible by default and the right security rules in the VPC are implemented.
+
 
 
