@@ -43,8 +43,25 @@ In the AWS environment, there will be one VPC with 2 subnets one that is Public 
 
 Security considerations that will need to be considered include ensuring that the data is encrypted at rest and that the S3 bucket is not accessible by default and that the right security rules in the VPC are implemented. 
 
+The VPC would be set up with Twos subnets.
+
+Public and Private.
+Each subnet would have the appropiate Security group rules applied them. Below is an example of one such rule in a public subnet.
+
 The rules in the public subnet would be the following:
 
 - The outbound security group rules will allow HTTP traffic fron any IP address. (accept the default SG rules)
 
 - The Inbound rules will allows SSH from the host's IP address for example 110.22.23.** HTTP and HTTPS will be also be enabled in the inbound Security group rules.
+
+#Secret Management
+
+- In AWS to manage secrets between accounts it best practice to rotate the secrets. A services that lets you create secrets is called AWS KMS and the keys can be stored in AWS secrets manager. 
+
+In this solutions I would uses secrets manager to store the databases credientals in AWS. 
+
+#CI/CD
+
+In AWS I would use CodeCommit to deploy the application through a CI/CD Pipeline. This would update any changes to the app.
+
+
