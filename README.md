@@ -8,6 +8,7 @@ To deploy this database application to AWS the following needs to be setup on yo
 1. Set up Terraform
 
 To setup Terraform on Windows visit Terraform's website https://www.terraform.io/downloads
+Terraform will be used to deploy the application to AWS. It can be set up to use AWS account credentials, using the secret access key for your AWS user.
 
 2. Install the AWS CLI
 
@@ -22,11 +23,7 @@ The IDE is where the code for the application will be set up.
 
 GitHub will be used to store and host the repos. It also is where the code for the application is updated. 
 
-5. Terraform
 
-To set up Terraform on Windows visit Terraform's website https://www.terraform.io/downloads and follow the instructions. 
-
-Terraform will be used to deploy the application to AWS. It can be set up to use AWS account credentials, using the secret access key for your AWS user.
 # Architecture
 The AWS environment will be set up with the following to host the application
 
@@ -34,6 +31,7 @@ Amazon Aurora DB instance to host the Database across a Multiple AZ
 EC2 instance to host the application that will be connected to an Auto Scaling Group to ensure that it is highly available to scalable to meet peak demands. The EC2 Auto scaling group will be set up between two availability zones. 
 An Elastic Load balancer will be attached to the VPC and help distribute the workloads of the application. 
 An S3 bucket will be used to host the files of the application. It will be stored in a folder available on an S3 bucket.
+
  
  
 # Network
@@ -54,7 +52,7 @@ The rules in the public subnet would be the following:
 
 - The Inbound rules will allows SSH from the host's IP address for example 110.22.23.** HTTP and HTTPS will be also be enabled in the inbound Security group rules.
 
-#Secret Management
+# Secret Management
 
 - In AWS to manage secrets between accounts it best practice to rotate the secrets. A services that lets you create secrets is called AWS KMS and the keys can be stored in AWS secrets manager. 
 
