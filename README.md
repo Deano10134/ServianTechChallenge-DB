@@ -1,6 +1,7 @@
 # ServianTechChallenge-DB
 This repository will show my solution to deploy the application for the Servian Tech challenge to the AWS Cloud environment.
 
+
 # Prerequisites
 
 To deploy this database application to AWS the following needs to be setup on your system.
@@ -80,3 +81,5 @@ Also, if given more time I would use CloudFormation to deploy the templates for 
 # Health Checks
 
 To verify that the applications work once it would be deployed it would be tested that the application is accessible by the EC2 instance IP address endpoint. AWS CodeDeploy will only commit a build if an instance is healthy if the instance is not healthy it will fail.
+
+This is an outline of how would approach the challenge.
