@@ -60,7 +60,9 @@ The rules in the public subnet would be the following:
 
 - The Inbound rules will allow SSH from the host's IP address for example 110.22.23.** HTTP and HTTPS will also be enabled in the inbound Security group rules.
 
-The subnet that the Database is deployed in would have to allow port
+The subnet that the Database is deployed in would have to allow port.
+
+Other AWS Services that could be used for security is AWS Security Hub which monitors resources for compliance and against AWS standards. It recommends what actions to take.
 
 
 # Secret Management
@@ -77,4 +79,4 @@ Also, if given more time I would use CloudFormation to deploy the templates for 
 
 # Health Checks
 
-To verify that the applications work once it would be deployed it would be tested that the application is accessible by the EC2 instance IP address endpoint.
+To verify that the applications work once it would be deployed it would be tested that the application is accessible by the EC2 instance IP address endpoint. AWS CodeDeploy will only commit a build if an instance is healthy if the instance is not healthy it will fail.
