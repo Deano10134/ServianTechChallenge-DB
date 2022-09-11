@@ -1,0 +1,365 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This template is an example of how the DB app can be deployed in AWS using AWS CloudFormation. The template will feature the following AWS services as per the architecture diagram S3, EC2, Amazon Auroa and VPC.
+
+Parameters:
+    VpcId: 
+      Type: "AWS::EC2::VPC::Id"
+      Description: "VpcId of your existing Virtual Private Cloud (VPC)"
+      Default: vpc-0d5777d3xxxxxxx74,
+      ConstraintDescription": "Must be the VPC Id of an existing Virtual Private Cloud."
+
+DBName:
+    Description: Database Name
+    Type: String
+    MinLength: '1'
+    MaxLength: '64'
+    AllowedPattern: "^[a-zA-Z]+[0-9a-zA-Z_]*$" 
+    ConstraintDescription: Must start with a letter. Only numbers, letters, and _ accepted. max length 64 characters 
+
+DBPort:
+    Description: TCP/IP Port for the Database Instance
+    Type: Number
+    Default: 5432
+    ConstraintDescription: 'Must be in the range [1150-65535]'
+    MinValue: 1150
+    MaxValue: 65535
+    
+DBEngineVersion:
+    Description: Select Database Engine Version
+    Type: String
+    Default: 13.7
+    AllowedValues:
+      - 11.16
+      - 12.11
+      - 13.7
+      - 14.3
+     
+DBInstanceClass:
+    Default: db.r6g.large
+    Description: Database Instance Class
+    Type: String
+    AllowedValues:
+    - db.t4g.medium
+    - db.t4g.large
+    - db.r5.large
+    - db.r5.xlarge
+    - db.r5.2xlarge
+    - db.r5.4xlarge
+    - db.r5.8xlarge
+    - db.r5.12xlarge
+    - db.r5.16xlarge
+    - db.r5.24xlarge
+    - db.r6g.large
+    - db.r6g.xlarge
+    - db.r6g.2xlarge
+
+S3BucketName:
+  Description: Name of S3 Bucket
+  Type: String
+
+#Resources
+AuroraDBCluster:
+  Type: AWS::RDS::DBCluster
+  DeletionPolicy: Snapshot
+  UpdateReplacePolicy: Snapshot
+Properties:
+     Engine: aurora-postgresql
+    
+EngineVersion: Ref DBEngineVersion
+DatabaseName: If [IsUseDBSnapshot, !Ref "AWS::NoValue", !Ref DBName]
+Port: !Ref DBPort
+ MasterUsername:
+       !If [IsUseDBSnapshot, !Ref "AWS::NoValue", !Join ['', ['{{resolve:secretsmanager:', !Ref AuroraMasterSecret, ':SecretString:username}}' ]]]
+     MasterUserPassword:
+        !If [IsUseDBSnapshot, !Ref "AWS::NoValue", !Join ['', ['{{resolve:secretsmanager:', !Ref AuroraMasterSecret, ':SecretString:password}}' ]]]
+DBSubnetGroupName: !Ref DBSubnetGroup
+    VpcSecurityGroupIds:
+   - !Ref ClusterSecurityGroup  
+     BackupRetentionPeriod: If [IsProd, 35, 7]
+      DBClusterParameterGroupName: !Ref RDSDBClusterParameterGroup
+     SnapshotIdentifier: If [IsUseDBSnapshot, !Ref DBSnapshotName, !Ref "AWS::NoValue"]
+      StorageEncrypted: If [IsUseDBSnapshot, !Ref "AWS::NoValue", true]
+      KmsKeyId: !If [IsNotUseDBSnapshot, !Ref AuroraKMSCMK, !Ref 'AWS::NoValue']
+      EnableIAMDatabaseAuthentication: !If [DoEnableIAM, true, !Ref "AWS::NoValue"]
+      Tags:
+      - Key: EnvironmentStage
+        Value: !Ref EnvironmentStage
+      - Key: Application
+        Value: !Ref Application
+        -
+          Key: ApplicationVersion
+          Value: !Ref ApplicationVersion
+        -
+          Key: ProjectCostCenter
+          Value: !Ref ProjectCostCenter
+        -
+          Key: ServiceOwnersEmailContact
+          Value: !Ref ServiceOwnersEmailContact          
+        -
+          Key: Confidentiality
+          Value: !Ref Confidentiality
+        -
+          Key: Compliance
+          Value: !Ref Compliance
+  #Aurora DB instance example     
+AuroraDBFirstInstance:
+ Type: AWS::RDS::DBInstance
+  Properties:
+     CopyTagsToSnapshot: true  
+    DBInstanceClass:
+    Ref: DBInstanceClass
+      DBClusterIdentifier: !Ref AuroraDBCluster  
+      Engine: aurora-postgresql
+      EngineVersion: !Ref DBEngineVersion
+      DBParameterGroupName:
+        Ref: DBParamGroup
+      MonitoringInterval: !If [IsProd, 1, 0]
+      MonitoringRoleArn: !If [IsProd, !GetAtt MonitoringIAMRole.Arn, !Ref "AWS::NoValue"]
+      AutoMinorVersionUpgrade: !If [IsProd, 'false', 'true']
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      PubliclyAccessible: false
+      EnablePerformanceInsights: false
+      PerformanceInsightsKMSKeyId: !Ref AuroraKMSCMK
+      PerformanceInsightsRetentionPeriod: !If [IsProd, 731, 7]
+      Tags:
+        -
+          Key: EnvironmentStage
+          Value: !Ref EnvironmentStage
+        -
+          Key: Application
+          Value: !Ref Application
+        -
+          Key: ApplicationVersion
+          Value: !Ref ApplicationVersion
+        -
+          Key: ProjectCostCenter
+          Value: !Ref ProjectCostCenter
+        -
+          Key: ServiceOwnersEmailContact
+          Value: !Ref ServiceOwnersEmailContact
+     -    Key: Confidentiality
+          Value: !Ref Confidentiality
+     - Key: Compliance
+     Value: !Ref Compliance
+
+ InstanceSecurityGroup: 
+ Type: AWS::EC2::SecurityGroup
+  Properties:
+    GroupDescription: Allow http to client host
+    VpcId: Ref: myVPC
+    SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+    SecurityGroupEgress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+
+# Application Load Balancer
+ApplicationLoadBalancer: 
+  Type: AWS::ElasticLoadBalancingV2::LoadBalancer,
+  Properties:
+      Subnets: 
+      ALBSecurityGroup: 
+      Type: "AWS::EC2::SecurityGroup"
+     Properties: 
+    GroupDescription": "Allow http to client host"
+     VpcId: 
+          Ref: "VpcId"
+         SecurityGroupIngress:
+         IpProtocol": "tcp"
+         FromPort: 80
+         ToPort": 80
+         CidrIp": "0.0.0.0/0"
+  SecurityGroupEgress:
+    IpProtocol: "tcp"
+            FromPort: 80
+           ToPort: 80
+  ApplicationLoadBalancer: 
+      Type": "AWS::ElasticLoadBalancingV2::LoadBalancer"
+      Properties": 
+        Subnets: 
+        SecurityGroups"=: 
+       Ref": "ALBSecurityGroup"
+  ALBListener:
+   Type: "AWS::ElasticLoadBalancingV2::Listener"
+      Properties:
+        DefaultActions: 
+            Type: forward"
+            TargetGroupArn: 
+              Ref: "ALBTargetGroup"
+    LoadBalancerArn:
+          Ref: "ApplicationLoadBalancer"
+         Port: 80
+         Protocol: "HTTP"
+    
+ALBTargetGroup":
+  Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+  Properties: 
+    HealthCheckIntervalSeconds: 300
+    HealthCheckTimeoutSeconds: 120
+    HealthyThresholdCount: 2
+    Port: 80
+    Protocol: "HTTP"
+    UnhealthyThresholdCount: 2
+    VpcId":
+         Ref": "VpcId"
+     TargetGroupAttributes":
+     
+     Key: "stickiness.enabled"
+     Value: "true"
+        
+    Key: "stickiness.type"
+    Value: "lb_cookie"
+    
+    Key: "stickiness.lb_cookie.duration_seconds"
+    Value": "30"
+ WebServerGroup: 
+   Type: "AWS::AutoScaling::AutoScalingGroup"
+      Properties:
+      Subnets: !Ref Subnets
+      LaunchConfigurationName":
+        Ref": "LaunchConfig"
+        MinSize: "1"
+        MaxSize": "5"
+        DesiredCapacity:
+          Ref: "WebServerCapacity"
+        TargetGroupARNs: 
+                 Ref": "ALBTargetGroup"
+  CreationPolicy":
+        ResourceSignal: 
+         Timeout": PT15M,
+          "Cunt":
+            "Ref": "WebServerCapacity"
+      UpdatePolicy:
+        AutoScalingRollingUpdate
+          MinInstancesInService: 1
+          MaxBatchSize: 1
+          PauseTime: "PT15M"
+          WaitOnResourceSignals: true
+        Subnets: !Ref Subnets 
+        SecurityGroups: 
+        Ref": "ALBSecurityGroup"
+    
+  ALBListener: 
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+      Properties": 
+       DefaultActions: 
+            Type": "forward"
+            TargetGroupArn: 
+              Ref: "ALBTargetGroup"
+        LoadBalancerArn: 
+          Ref: "ApplicationLoadBalancer"
+        Port: 80,
+ 
+ALBTargetGroup:
+  Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+      Properties:
+         HealthCheckIntervalSeconds : 300
+         HealthCheckTimeoutSeconds : 120
+         HealthyThresholdCount: 2
+         Port: 80
+         Protocol: "HTTP"
+         UnhealthyThresholdCount": 2
+         VpcId:
+          "Ref": "VpcId"
+
+        TargetGroupAttributes":
+    
+            Key: "stickiness.enabled"
+            Value": "true"
+        
+            Key: "stickiness.type"
+            Value: "lb_cookie"
+  
+            Key: "stickiness.lb_cookie.duration_seconds"
+            Value: "30"
+
+# Webserver Auto Scaling Group
+  WebServerGroup:
+   Type: "AWS::AutoScaling::AutoScalingGroup"
+    Properties:
+    Subnets: !Ref Subnets
+        LaunchConfigurationName:
+          Ref: "LaunchConfig"
+        MinSize: "1",
+        MaxSize: "5",
+        DesiredCapacity:
+          Ref: "WebServerCapacity"
+        TargetGroupARNs": 
+          Ref: "ALBTargetGroup"
+      CreationPolicy": 
+        ResourceSignal: 
+          Timeout: "PT15M",
+          Count: 
+            Ref: "WebServerCapacity"
+      UpdatePolicy: 
+        AutoScalingRollingUpdate:
+          MinInstancesInService: 1,
+          MaxBatchSize: 1,
+          PauseTime": "PT15M",
+          WaitOnResourceSignals: true
+# Creates an S3 Bucket in AWS account
+S3Bucket:
+  Type: 'AWS::S3::Bucket'
+    Properties:
+      AccessControl: PublicRead
+      BucketName: public-bucket
+      MetricsConfigurations:
+        - Id: EntireBucket
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+        RoutingRules:
+          - RoutingRuleCondition:
+              HttpErrorCodeReturnedEquals: '404'
+              KeyPrefixEquals: out1/
+            RedirectRule:
+              ReplaceKeyPrefixWith: report-404/
+    DeletionPolicy: Retain
+
+Outputs:
+  ClusterEndpoint:
+    Description: 'Aurora Cluster/Writer Endpoint'
+    Value: !GetAtt 'AuroraDBCluster.Endpoint.Address'
+  ReaderEndpoint:
+    Description: 'Aurora Reader Endpoint'
+    Value: !GetAtt 'AuroraDBCluster.ReadEndpoint.Address'
+  Port:
+    Description: 'Aurora Endpoint Port'
+    Value: !GetAtt 'AuroraDBCluster.Endpoint.Port'
+  DBUsername:
+    Description: 'Database master username'
+    Value: !Ref DBUsername
+  DBName:
+    Description: 'Database Name'
+    Value: !Ref DBName
+  PSQLCommandLine:    
+    Description: PSQL Command Line
+    Value: !Join
+             - ''
+             - - 'psql --host='
+               - !GetAtt 'AuroraDBCluster.Endpoint.Address' 
+               - ' --port='
+               - !GetAtt 'AuroraDBCluster.Endpoint.Port'
+               - ' --username='
+               - !Ref DBUsername
+               - ' --dbname='
+               - !Ref DBName
+  WebsiteURL:
+    Value: !GetAtt
+      - S3Bucket
+      - WebsiteURL
+    Description: URL for website hosted on S3
+    S3BucketSecureURL:
+    Value: !Join
+      - ''
+      - - 'https://'
+        - !GetAtt
+          - S3Bucket
+          - DomainName
+    Description: Name of S3 bucket to hold website content
+    
